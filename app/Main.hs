@@ -48,30 +48,49 @@ getKeyFromOffset :: Int -> Int -> Int
 getKeyFromOffset origin offset = mod (origin + offset) (length keys)
 
 majorSteps :: [Int]
-majorSteps = [0, 2, 4, 5, 7, 9, 11, 12]
+majorSteps = [0, 2, 4, 5, 7, 9, 11]
 
 minorSteps :: [Int]
-minorSteps = [0, 2, 3, 5, 7, 8, 10, 12]
+minorSteps = [0, 2, 3, 5, 7, 8, 10]
 
-getScale :: Int -> ScaleType -> [Int]
-getScale start Major = [mod (start + x) (length keys) | x <- majorSteps]
-getScale start Minor = [mod (start + x) (length keys) | x <- minorSteps]
+getScale :: String -> ScaleType -> [Int]
+getScale start Major = [mod (keyToIdx start + x) (length keys) | x <- majorSteps]
+getScale start Minor = [mod (keyToIdx start + x) (length keys) | x <- minorSteps]
 
 generateTriad :: String -> ScaleType -> Int -> [Int]
 generateTriad scaleBase scaleType deg =
     let
-        scale = getScale (keyToIdx scaleBase) scaleType
+        scale = getScale scaleBase scaleType
         degree = deg - 1
      in
-        [scale !! mod degree (length keys), scale !! mod (degree + 2) (length keys), scale !! mod (degree + 4) (length keys)]
+        [scale !! mod degree (length scale), scale !! mod (degree + 2) (length scale), scale !! mod (degree + 4) (length scale)]
 
 generateSeventhChord :: String -> ScaleType -> Int -> [Int]
 generateSeventhChord scaleBase scaleType deg =
     let
-        scale = getScale (keyToIdx scaleBase) scaleType
+        scale = getScale scaleBase scaleType
         degree = deg - 1
      in
-        [scale !! mod degree (length keys), scale !! mod (degree + 2) (length keys), scale !! mod (degree + 4) (length keys), scale !! mod (degree + 6) (length keys)]
+        [scale !! mod degree (length scale), scale !! mod (degree + 2) (length scale), scale !! mod (degree + 4) (length scale), scale !! mod (degree + 6) (length scale)]
+
+majorProgression :: [Int]
+majorProgression = [4, 5, 3, 6, 2, 5, 1]
+
+minorProgression :: [Int]
+minorProgression = [4, 7, 3, 6, 2, 5, 1]
+
+generateProgression :: String -> ScaleType -> [Int] -> [(Int, [Int])]
+generateProgression scaleBase scaleType progression = [(x, generateSeventhChord scaleBase scaleType x) | x <- progression]
+
+degreeToRomanNumeral :: Int -> String
+degreeToRomanNumeral x
+    | x < 4 = replicate x 'I'
+    | x == 4 = "IV"
+    | x == 5 = "V"
+    | otherwise = 'V' : replicate (x - 5) 'I'
+
+printProgression :: [(Int, [Int])] -> IO ()
+printProgression input = putStr (concat [degreeToRomanNumeral degree ++ ": " ++ concat [keys !! key ++ ", " | key <- chord] ++ ['\n'] | (degree, chord) <- input])
 
 main :: IO ()
 main = putStrLn "Hello, Haskell!"
