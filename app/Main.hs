@@ -1,7 +1,17 @@
 module Main where
 
+data ScaleType = Major | Minor
+
 keys :: [String]
 keys = ["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
+
+keysToStr :: [Int] -> [String]
+keysToStr arr = [keys !! idx | idx <- arr]
+
+strToScaleType :: String -> ScaleType
+strToScaleType "Major" = Major
+strToScaleType "Minor" = Minor
+strToScaleType _ = error "Invalid scale type"
 
 keyToIdx :: String -> Int
 -- A
@@ -33,6 +43,35 @@ keyToIdx "G" = 10
 keyToIdx "G#" = 11
 keyToIdx "Ab" = 11
 keyToIdx _ = error "Invalid note name"
+
+getKeyFromOffset :: Int -> Int -> Int
+getKeyFromOffset origin offset = mod (origin + offset) (length keys)
+
+majorSteps :: [Int]
+majorSteps = [0, 2, 4, 5, 7, 9, 11, 12]
+
+minorSteps :: [Int]
+minorSteps = [0, 2, 3, 5, 7, 8, 10, 12]
+
+getScale :: Int -> ScaleType -> [Int]
+getScale start Major = [mod (start + x) (length keys) | x <- majorSteps]
+getScale start Minor = [mod (start + x) (length keys) | x <- minorSteps]
+
+generateTriad :: String -> ScaleType -> Int -> [Int]
+generateTriad scaleBase scaleType deg =
+    let
+        scale = getScale (keyToIdx scaleBase) scaleType
+        degree = deg - 1
+     in
+        [scale !! mod degree (length keys), scale !! mod (degree + 2) (length keys), scale !! mod (degree + 4) (length keys)]
+
+generateSeventhChord :: String -> ScaleType -> Int -> [Int]
+generateSeventhChord scaleBase scaleType deg =
+    let
+        scale = getScale (keyToIdx scaleBase) scaleType
+        degree = deg - 1
+     in
+        [scale !! mod degree (length keys), scale !! mod (degree + 2) (length keys), scale !! mod (degree + 4) (length keys), scale !! mod (degree + 6) (length keys)]
 
 main :: IO ()
 main = putStrLn "Hello, Haskell!"
